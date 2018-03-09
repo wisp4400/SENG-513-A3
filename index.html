@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+    
+      #messages { margin-bottom: 40px }
+
+
+      #online { list-style-type: none; margin: 0; padding: 0; }
+      #online li { padding: 5px 10px; }
+    
+      #online { margin-bottom: 40px }
+      .sheet-form {height: 88vh; overflow-y: auto}
+    </style>
+  </head>
+  <body class="bg-primary">
+    <div class="row my-2">
+      <div class="col-sm-9">
+        <h5 id="username">username</h5>
+        <ul class="bg-secondary sheet-form" id="messages" ></ul>
+      </div>
+      <div class="col-sm-3">
+        <h5>Online Users:</h5>
+        <ul class="bg-secondary sheet-form" id="online">
+        </ul>
+        
+      </div>
+    </div>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      $(function () {
+        cookie_id=document.cookie.replace(/(?:(?:^|.*;\s*)cookie\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+        name=document.cookie.replace(/(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+        $('#username').text("Username: " + name);
+        var socket = io();
+        socket.emit('now online',cookie_id);
+
+
+        $('form').submit(function(){
+          if($('#m').val().includes("/nickcolor")){
+            message=$('#m').val()
+            mesg=message.split(" ")[1]
+            msg["msg"]=mesg
+            msg["user"]=cookie_id;
+            socket.emit('nickcolor',JSON.stringify(msg));
+            $('#m').val('');
+
+
+          }
+          else if($('#m').val().includes("/nick")){
+            message=$('#m').val()
+            mesg=message.split(" ")[1]
+            msg={}
+            msg["msg"]=mesg
+            msg["user"]=cookie_id;
+            socket.emit('nick',JSON.stringify(msg));
+            $('#m').val('');
+
+          }
+          else{
+            msg={};
+            msg["msg"] = $('#m').val();
+            msg["user"]=cookie_id;
+            socket.emit('chat message',JSON.stringify(msg));
+            $('#m').val('');
+          }
+       
+          return false;
+        });
+        socket.on('chat message', function(msg){
+          message=JSON.parse(msg)
+
+          mesg=message["date"] + "   " + message["user"] + ":   " + message["msg"]
+          if(message["user"]==name){
+            $('#messages').append($('<li>').text(mesg).css("color", "#" + message["color"]).css("fontSize","large").css("font-weight","bold"));
+          }
+          else{
+          $('#messages').append($('<li>').text(mesg).css("color", "#" + message["color"]).css("fontSize","large"));
+          }
+        });
+
+        socket.on('users', function(msg){
+          message=JSON.parse(msg)
+
+          $('#online').empty()
+          for (key in message){
+            $('#online').append($('<li>').text(message[key]).css("color", "#ffffff"));
+          }
+        });
+        
+        socket.on('hist', function(msg){
+          message=JSON.parse(msg)
+          for(i=0,len=message.length; i<len; i++){
+            mesg=message[i]["date"] + "   " + message[i]["user"] + ":   " + message[i]["msg"]
+            if(message[i]["user"]==name){
+              $('#messages').append($('<li>').text(mesg).css("color", "#" + message[i]["color"]).css("fontSize","large").css("font-weight","bold"));
+            }
+            else{
+            $('#messages').append($('<li>').text(mesg).css("color", "#" + message[i]["color"]).css("fontSize","large"));
+            }
+          }
+        });
+        socket.on('namebad', function(msg){
+            $('#messages').append($('<li>').text("Error name in use").css("color", "#FF0000"));
+        });
+
+        socket.on('name', function(msg){
+          $('#messages').append($('<li>').text("nickname changed to: "+ msg).css("color", "#00FF00"));
+          newcookie="name="+msg;
+          document.cookie =newcookie
+          name=document.cookie.replace(/(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+          $('#username').text("Username: " + name);
+
+        });
+
+
+      });
+    </script>
+  </body>
+</html>
