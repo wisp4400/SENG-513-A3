@@ -11,3 +11,16 @@ You can also spin up a free Heroku dyno to test it out:
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/socketio/chat-example)
 
 Besides, the application is deployed on [Now](https://zeit.co/now): https://socketio-chat-example.now.sh/
+
+
+
+
+Instructions:
+run the following from command line
+
+ git clone https://github.com/wisp4400/SENG-513-A3
+ cd chat-example/
+ npm install
+ node index.js 
+
+ then log in on: http://localhost:4000/
